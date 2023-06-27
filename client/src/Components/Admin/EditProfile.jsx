@@ -1,22 +1,36 @@
 import { faMapLocation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
-import { Button, Container, Form, Modal } from "react-bootstrap";
+import { useContext, useEffect, useState } from "react";
+import { Container, Form, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { APILOC } from "../../config/api";
 import { useCustomMutation } from "../../config/query";
+import { UserContext } from "../../utils/context/userContext";
 import { editProfile } from "../../utils/profile";
-import { distance } from "@turf/turf"
 import Map from "../Map";
 const EditProfile = () => {
-  const [location, setLocation] = useState({ lat: -6.402484, lng: 106.794243 })
   const navigate = useNavigate()
   const [showMap, setShowMap] = useState(false)
-  const [mapCenter, setMapCenter] = useState({ lat: -6.175110, lng: 106.865036 });
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState();
+  const [lat, setLat] = useState();
+  const [lng, setLng] = useState();
+  const [state, _] = useContext(UserContext)
 
-  const handleMapClick = (event) => {
-    const { lat, lng } = event;
-    setSelectedLocation({ lat, lng });
+
+  const getLocation = (lats, lngs) => {
+    APILOC.get(`/reverse?format=json&lat=${lats}&lon=${lngs}`).then(
+      (response) => {
+        console.log(response, "ini response");
+        setSelectedLocation(response?.data?.display_name);
+      }
+    );
+  };
+
+  const handleMapClick = (e) => {
+    const { lat, lng } = e.latlng;
+    console.log(lat, lng, "ini lat n lang")
+    setLat(lat);
+    setLng(lng);
   };
 
   const handleMapButtonClick = () => {
@@ -27,10 +41,22 @@ const EditProfile = () => {
     setShowMap(false);
   };
 
-  const handleMapModalSave = () => {
+  const latUser = state?.user.location.split(",")[0]
+  const lngUser = state?.user.location.split(",")[1]
+  useEffect(() => {
+    if (lat && lng) {
+      getLocation(lat, lng);
+      console.log("engga ini yg terender");
+    } else if (latUser && lngUser) {
+      getLocation(
+        parseFloat(latUser),
+        parseFloat(lngUser)
+      );
+      console.log("ini terrednder");
+    }
+  }, [lat, lng, state?.user]);
 
-    setShowMap(false);
-  };
+  const loc = `${lat}, ${lng}`;
 
   const [userUpdateData, setUserUpdateData] = useState({
     fullname: "",
@@ -41,6 +67,7 @@ const EditProfile = () => {
   });
   const postForm = useCustomMutation("patch", editProfile);
 
+
   const handleInputChange = (e) => {
     setUserUpdateData({
       ...userUpdateData,
@@ -48,69 +75,34 @@ const EditProfile = () => {
         e.target.type === "file" ? e.target.files : e.target.value,
     });
   };
-
   const updateUser = (e) => {
-
-    const loc = `${selectedLocation.lat}, ${selectedLocation.lng}`
-    console.log(loc)
     e.preventDefault();
     const formData = new FormData();
     formData.set("fullname", userUpdateData.fullname);
     formData.set("email", userUpdateData.email);
-    formData.set("location", loc);
     formData.set("phone", userUpdateData.phone);
-    formData.set("image", userUpdateData.image[0], userUpdateData.image[0].name);
+    if (userUpdateData?.image[0].name) {
+      formData.set("image", userUpdateData?.image[0], userUpdateData?.image[0].name);
+    } else {
+      formData.set("image", "");
+    }
+    formData.set("location", loc);
     const result = postForm.mutate(formData);
-
-
   };
 
-  const calculateDistance = (startLng, startLat, endLng, endLat) => {
-    const startPoint = ([startLng, startLat])
-    const endPoint = ([endLng, endLat])
-    const option = { units: 'kilometers' };
-    const dist = distance(startPoint, endPoint, option)
-    return dist
-  }
-  const loc = `${selectedLocation?.lat}, ${selectedLocation?.lng}`
-  const locationVal = loc.toString
-  console.log(loc, "ini loc")
-  console.log(selectedLocation, "ini pencobaan")
-  const [distances, setDistances] = useState()
 
-  const startLng = -74.005974;
-  const startLat = 40.712776;
-  const endLng = -118.243683;
-  const endLat = 34.052235;
-  const calculatedDistance = calculateDistance(loc.split(",")[1], loc.split(",")[0], 106.91914366287244, -6.177908904782766)
 
-  console.log(calculatedDistance.toFixed(2));
-  useEffect(() => {
-    setDistances()
-  }, [])
 
   return (
     <>
       <Modal size="xl" show={showMap} onHide={handleMapModalClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Select Location on Map</Modal.Title>
-        </Modal.Header>
         <Modal.Body>
           <Map
-            defaultCenter={mapCenter}
-            defaultZoom={13}
-            selectedLocation={selectedLocation}
-            handleMapClick={handleMapClick}
+            selectedLat={lat}
+            selectedLng={lng}
+            handleMapClick={(e) => handleMapClick(e)}
           />
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleMapModalClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleMapModalSave}>
-            Save Location
-          </Button>
-        </Modal.Footer>
       </Modal>
       <Container style={{ margin: "80px auto" }}>
         <h4
@@ -164,8 +156,8 @@ const EditProfile = () => {
             <Form.Control
               type="text"
               name="location"
-              value={userUpdateData.location}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange(e)}
+              defaultValue={selectedLocation}
               placeholder="Location"
               style={{ width: "75%", backgroundColor: "#D2D2D240", border: "2px solid #766C6C", height: "50px" }}
             />
@@ -187,6 +179,7 @@ const EditProfile = () => {
           </div>
         </Form>
       </Container>
+
     </>
   );
 };

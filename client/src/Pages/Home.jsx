@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Contents from "../Components/Card";
 import Jumbotron from "../Components/Jumbotron";
 import Recommended from "../Components/Recommended";
 import { useCustomQuery } from "../config/query";
-import { Partner } from "../utils/profile";
+import { Partner } from "../utils/admin";
+import { UserContext } from "../utils/context/userContext";
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,15 +12,17 @@ const Home = () => {
   const handleSearch = (term) => {
     setSearchTerm(term);
   };
-  let { data, isLoading } = useCustomQuery("partner", Partner)
-
+  const [state] = useContext(UserContext)
+  // let { data, isLoading, isSuccess } = useCustomQuery("partner", Partner)
+  // console.log(state, "cel")
+  let result = useCustomQuery("partner", Partner)
 
   return (
     <>
 
       <Jumbotron />
-      <Contents data={data} load={isLoading} />
-      <Recommended data={data} load={isLoading} />
+      <Contents data={result.data} load={result.isLoading} />
+      <Recommended data={result.data} load={result.isLoading} />
 
 
     </>

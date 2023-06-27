@@ -1,7 +1,6 @@
 import { useContext } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
-import Swal from "sweetalert2";
 import { useCustomMutation, useCustomQuery } from "../config/query";
 import { UserContext } from "../utils/context/userContext";
 import { getProductId } from "../utils/product";
@@ -16,13 +15,27 @@ const Detail = () => {
     getProductId(id),
   );
 
-
+  let result = useCustomQuery("test", getOrder)
   const order = useCustomMutation("try", postOrder)
+
+  const handleOrder = (prod) => {
+    let datas = {
+      qty: 1,
+      buyer_Id: state.user.id,
+      seller_Id: prod.user.id,
+      product_Id: prod.id,
+    };
+    order.mutate(datas, {
+      onSuccess: () => {
+        result.refetch()
+      },
+    });
+  };
 
 
   return (
     <Container className="containerCard">
-      <h3>{!isLoading && Partner[0].user.fullname}</h3>
+      <h3>{!isLoading && Partner[0]?.user?.fullname}</h3>
       <Row >
         {!isLoading && Partner.map((prod) => {
           return (
@@ -33,16 +46,7 @@ const Detail = () => {
                 <img src={prod.image} alt="" className="imgCardPartner" />
                 <p className="textCard">{prod.title}</p>
                 <p className="priceCard">Rp {prod.price.toLocaleString("en-ID")}</p>
-                <button onClick={() => {
-                  let datas = {
-                    qty: 1,
-                    buyer_Id: state.user.id,
-                    seller_Id: prod.user.id,
-                    product_Id: prod.id
-                  }
-                  order.mutate(datas)
-                  window.location.reload()
-                }}>Order</button>
+                <button onClick={() => handleOrder(prod)}>Order</button>
               </Col>
             </div>
 

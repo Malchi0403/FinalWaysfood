@@ -1,16 +1,15 @@
+import { faBurger, faDoorOpen, faUser } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useEffect, useState } from "react";
 import { Badge, Button, Container, Nav, NavDropdown, Navbar } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import User from "../assets/images/User.png";
 import Icon from "../assets/waysfood/Icon.svg";
 import Vect from "../assets/waysfood/Vector.png";
+import { useCustomQuery } from "../config/query";
 import { UserContext } from "../utils/context/userContext";
+import { getOrder } from "../utils/profile";
 import Login from "./Login";
 import Register from "./Register";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBurger, faDoorOpen, faUser } from "@fortawesome/free-solid-svg-icons";
-import { useCustomQuery } from "../config/query";
-import { getOrder } from "../utils/profile";
 
 function NavbarMenu({ className }) {
   const [show, setShowLogin] = useState(false);
@@ -20,10 +19,15 @@ function NavbarMenu({ className }) {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
   const navigate = useNavigate();
+  const [testLength, setTestLength] = useState(0);
 
   const [state, dispatch] = useContext(UserContext);
 
-  let { data: test, isLoading } = useCustomQuery("test", getOrder)
+  let { data: test, isLoading, isSuccess } = useCustomQuery("test", getOrder)
+  useEffect(() => {
+    setTestLength(test?.length || 0);
+  }, [test?.length]);
+
   const handleLogout = () => {
     dispatch({
       type: "LOGOUT",
@@ -35,7 +39,10 @@ function NavbarMenu({ className }) {
     navigate("/transaction")
   }
 
-
+  useEffect(() => {
+    // Lakukan refetch atau pembaruan data lainnya yang diperlukan saat test.length berubah
+    // ...
+  }, [testLength]);
 
   return (
     <>
@@ -48,7 +55,33 @@ function NavbarMenu({ className }) {
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           {state.isLogin === true ? (
-            state.user.role === "As Partner" ? (
+            state.user.role === "As User" ? (
+              <Navbar.Collapse id="navbarScroll">
+                <Nav
+                  className="ms-auto"
+                  navbarScroll
+                >
+                  <div className="containerBadge" onClick={handleOrder}>
+                    <img src={Vect} alt="" className="imgUserBucket" />
+                    {!isLoading && isSuccess && test !== null && (
+
+                      <Badge bg="danger" className="badge">{testLength}</Badge>
+                    )
+                    }
+                  </div>
+                  <NavDropdown title={<img src={state.user.image} alt="" className="imgPartnerUser" />}>
+                    <NavDropdown.Item href="/Profile">
+                      <FontAwesomeIcon icon={faUser} className="icsPartner" />
+                      Profile</NavDropdown.Item>
+                    <NavDropdown.Divider className="linePartner" />
+                    <NavDropdown.Item onClick={handleLogout} className="dropPartner" style={{ letterSpacing: "1px" }}>
+                      <FontAwesomeIcon icon={faDoorOpen} className="icsPartner" style={{ color: "red" }} />
+                      Logout
+                    </NavDropdown.Item>
+                  </NavDropdown>
+                </Nav>
+              </Navbar.Collapse>
+            ) : state.user.role === "As Partner" ? (
               <Navbar.Collapse id="navbarScroll">
                 <Nav className="ms-auto" navbarScroll>
                   <NavDropdown title={
@@ -69,31 +102,8 @@ function NavbarMenu({ className }) {
                   </NavDropdown>
                 </Nav>
               </Navbar.Collapse>
-            ) : state?.user?.role === "As User" ? (
-              <Navbar.Collapse id="navbarScroll">
-                <Nav
-                  className="ms-auto"
-                  navbarScroll
-                >
-                  <div className="containerBadge" onClick={handleOrder}>
-                    <img src={Vect} alt="" className="imgUserBucket" />
-                    {!isLoading && test.length ?
-                      <Badge bg="danger" className="badge">{test.length}</Badge>
-                      : <></>
-                    }
-                  </div>
-                  <NavDropdown title={<img src={state.user.image} alt="" className="imgPartnerUser" />}>
-                    <NavDropdown.Item href="/Profile">
-                      <FontAwesomeIcon icon={faUser} className="icsPartner" />
-                      Profile</NavDropdown.Item>
-                    <NavDropdown.Divider className="linePartner" />
-                    <NavDropdown.Item onClick={handleLogout} className="dropPartner" style={{ letterSpacing: "1px" }}>
-                      <FontAwesomeIcon icon={faDoorOpen} className="icsPartner" style={{ color: "red" }} />
-                      Logout
-                    </NavDropdown.Item>
-                  </NavDropdown>
-                </Nav>
-              </Navbar.Collapse>
+
+
             ) : <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="ms-auto">
                 <Button className="loginNav" onClick={() => handleShow()}>

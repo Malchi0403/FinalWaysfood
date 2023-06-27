@@ -1,27 +1,90 @@
-import { Button, Col, Container, Form, InputGroup, Row } from "react-bootstrap";
-import Icon from "../assets/images/IconBooking.png";
-import Picture from "../assets/images/Bank.png";
-import { useContext, useEffect, useState } from "react";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-import { useNavigate } from "react-router-dom";
-import { API } from "../config/api";
-import { useMutation } from "react-query";
-import { UserContext } from "../utils/context/userContext";
-import { useCustomMutation, useCustomQuery } from "../config/query";
-import { transaction } from "../utils/transaction";
-import { faMapLocation, faRecycle, faSquareMinus, faSquarePlus, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { faMapLocation, faSquareMinus, faSquarePlus, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { distance } from "@turf/turf";
+import { useContext, useEffect, useState } from "react";
+import { Col, Container, Form, Modal, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { APILOC } from "../config/api";
+import { useCustomMutation, useCustomQuery } from "../config/query";
+import { UserContext } from "../utils/context/userContext";
+import { deleteAllorder, deleteorder } from "../utils/product";
 import { getOrder, postOrder } from "../utils/profile";
+import { transaction } from "../utils/transaction";
+import Map from "./Map";
 
 const Orders = () => {
   const navigate = useNavigate(6)
+  // fetch & post
   const order = useCustomMutation("try", postOrder)
   const pay = useCustomMutation("pay", transaction)
+  const deleteid = useCustomMutation("deleteid", deleteorder)
   let { data, isLoading, refetch } = useCustomQuery("test", getOrder)
 
-  console.log(data)
-  const total = data.map((tot) => {
+  // Map 
+  const [showMap, setShowMap] = useState(false)
+  const [lat, setLat] = useState();
+  const [lng, setLng] = useState();
+  const [state, _] = useContext(UserContext)
+
+  const [selectedLocation, setSelectedLocation] = useState();
+  const ongkir = 8000
+  const getLocation = (lats, lngs) => {
+    APILOC.get(`/reverse?format=json&lat=${lats}&lon=${lngs}`).then(
+      (response) => {
+        console.log(response, "ini response");
+        setSelectedLocation(response?.data?.display_name);
+      }
+    );
+  };
+
+  const handleMapClick = (e) => {
+    const { lat, lng } = e.latlng;
+    setLat(lat);
+    setLng(lng);
+  };
+
+  const handleMapButtonClick = () => {
+    setShowMap(true);
+  };
+
+  const handleMapModalClose = () => {
+    setShowMap(false);
+  };
+
+  // calculate
+  const calculateDistance = (startLng, startLat, endLng, endLat) => {
+    const startPoint = ([startLng, startLat])
+    const endPoint = ([endLng, endLat])
+    const option = { units: 'kilometers' };
+    const dist = distance(startPoint, endPoint, option)
+    return dist
+  }
+
+
+  const latUser = state?.user.location.split(",")[0]
+  const lngUser = state?.user.location.split(",")[1]
+  const partnerLocLng = data[0]?.seller?.location?.split(",")[1]
+  const partnerLocLat = data[0]?.seller?.location?.split(",")[0]
+  useEffect(() => {
+    if (lat && lng) {
+      getLocation(lat, lng);
+      console.log("engga ini yg terender");
+    } else if (latUser && lngUser) {
+      getLocation(
+        parseFloat(latUser),
+        parseFloat(lngUser)
+      );
+      console.log("ini terrednder");
+    }
+  }, [lat, lng, state?.user]);
+
+  const loc = `${lat}, ${lng}`;
+
+
+
+
+  const total = data?.map((tot) => {
     return tot.qty * tot.product.price
   })
   const subTotal = total.reduce((acc, curr) => acc + curr, 0
@@ -32,17 +95,29 @@ const Orders = () => {
   })
   const subQty = totalQty.reduce((acc, curr) => acc + curr, 0
   )
+
+  const calculatedDistance = calculateDistance(partnerLocLng, partnerLocLat, loc?.split(",")[1], loc?.split(",")[0])
+  const distances = calculatedDistance.toFixed(2)
+  let totalOngkir = ongkir * distances
+  let result = subTotal + totalOngkir
+
   const handleWaitingApprove = async (e) => {
     try {
       e.preventDefault();
       const transaction = {
-        buyerid: data[0].buyer.id,
-        sellerid: data[0].seller?.id,
+        buyerid: data[0]?.buyer?.id,
+        sellerid: data[0]?.seller?.id,
         totalPrice: Number(subTotal)
       };
 
       const body = JSON.stringify(transaction);
-      const response = await pay.mutateAsync(body);
+      const response = await pay.mutateAsync(body, {
+        onSuccess: () => {
+          deleteAllorder()
+          refetch()
+          navigate("/Profile")
+        }
+      });
 
       console.log(response, "cek response");
       if (response) {
@@ -69,6 +144,8 @@ const Orders = () => {
           },
         });
       }
+
+
     } catch (error) {
       console.log("transaction failed : ", error);
     }
@@ -93,6 +170,15 @@ const Orders = () => {
   }, []);
   return (
     <>
+      <Modal size="xl" show={showMap} onHide={handleMapModalClose}>
+        <Modal.Body>
+          <Map
+            selectedLat={lat}
+            selectedLng={lng}
+            handleMapClick={(e) => handleMapClick(e)}
+          />
+        </Modal.Body>
+      </Modal>
       <Container style={{ marginTop: "60px" }}>
         <div>
           <h3>{!isLoading && data ? data[0]?.seller?.fullname : "cinta"}</h3>
@@ -105,10 +191,12 @@ const Orders = () => {
             type="text"
             name="location"
             placeholder="Location"
+            defaultValue={selectedLocation}
             style={{ width: "75%", backgroundColor: "#fff", border: "1px solid #766C6C", height: "50px" }}
           />
           <div className="MapButton">
             <button type="button"
+              onClick={handleMapButtonClick}
             >
               Select On Map <FontAwesomeIcon icon={faMapLocation} />
             </button>
@@ -187,7 +275,25 @@ const Orders = () => {
                     <Row className="textTransaction me-3">
                       <Col>Rp</Col>
                       <Col>{item.product.price}</Col>
-                      <div className="bin">
+                      <div className="bin" onClick={() => {
+                        Swal.fire({
+                          title: "Are you sure want to delete this Order?",
+                          text: "You won't be able to revert this!",
+                          icon: "warning",
+                          showCancelButton: true,
+                          confirmButtonColor: "#3085d6",
+                          cancelButtonColor: "#d33",
+                          confirmButtonText: "Yes, delete it!",
+                        }).then((result) => {
+                          if (result.isConfirmed) {
+                            deleteid.mutate(item.id, {
+                              onSuccess: () => {
+                                refetch()
+                              }
+                            })
+                          }
+                        })
+                      }}>
                         <FontAwesomeIcon icon={faTrashCan} />
                       </div>
                     </Row>
@@ -200,19 +306,23 @@ const Orders = () => {
           <Col lg={3} className="mt-3" >
             <Row style={{ borderTop: "1px solid #000", padding: "20px 0" }}>
               <Col lg={8}>Sub Total</Col>
-              <Col >Rp {subTotal} </Col>
+              <Col >Rp {subTotal.toLocaleString("en-ID")} </Col>
               <Row >
                 <Col lg={8}>Quantity</Col>
                 <Col style={{ textAlign: "end" }}>{subQty}</Col>
               </Row>
               <Row >
+                <Col lg={8}>Distance</Col>
+                <Col style={{ textAlign: "end" }}>{distances} Km</Col>
+              </Row>
+              <Row >
                 <Col lg={8}>Ongkir</Col>
-                <Col style={{ textAlign: "end" }} >FREE</Col>
+                <Col style={{ textAlign: "end" }} >{totalOngkir.toLocaleString("en-ID")}</Col>
               </Row>
             </Row>
             <Row style={{ borderTop: "1px solid #000", padding: "20px 0" }}>
               <Col lg={8}>Total</Col>
-              <Col style={{ textAlign: "end" }}>Rp </Col>
+              <Col style={{ textAlign: "end" }}>Rp {result.toLocaleString("en-ID")}</Col>
             </Row>
           </Col>
         </Row>
@@ -221,11 +331,9 @@ const Orders = () => {
           <button type="button"
             onClick={(e) => handleWaitingApprove(e)}
           >
-            Select On Map <FontAwesomeIcon icon={faMapLocation} />
+            ORDER
           </button>
         </div>
-
-
       </Container>
     </>
   );

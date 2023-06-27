@@ -1,14 +1,12 @@
-import { Button, Modal, Form } from "react-bootstrap";
-import Palm from "../assets/images/iconPalm.png";
-import Hibiscus from "../assets/images/iconHibiscus.png";
 import { useContext, useState } from "react";
+import { Button, Form, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../utils/context/userContext";
 import { useCustomMutation } from "../config/query";
 import { login } from "../utils/auth";
+import { UserContext } from "../utils/context/userContext";
 
-import { setAuthToken } from "../config/api";
 import Swal from "sweetalert2";
+import { setAuthToken } from "../config/api";
 
 const Login = ({ show, handleCloseLogin }) => {
   const navigate = useNavigate();

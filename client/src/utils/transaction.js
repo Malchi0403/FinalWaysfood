@@ -16,3 +16,37 @@ export async function transaction(data) {
     throw new error("transaction error");
   }
 }
+export async function transactionUser() {
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    };
+
+    const transaction = await API.get("transaction-user", config);
+    if (transaction && transaction.status === 200) {
+
+      return transaction?.data?.data;
+    }
+  } catch (error) {
+    throw new error("transaction error");
+  }
+}
+export async function transactionPartner() {
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    };
+
+    const transaction = await API.get("transaction-partner", config);
+    if (transaction && transaction.status === 200) {
+
+      return transaction?.data?.data;
+    }
+  } catch (error) {
+    throw new error("transaction error");
+  }
+}

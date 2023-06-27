@@ -1,19 +1,10 @@
 import Swal from "sweetalert2";
 import { API } from "../config/api";
 
-export async function Partner() {
-  try {
-    const response = await API.get("partner");
-    if (response) {
-      return response.data.data;
-    }
-  } catch (error) {
-    throw new Error("Failed to fetch data");
-  }
-}
+
 
 export async function editProfile( data) {
-  
+
   try {
     
     const config = {
@@ -57,9 +48,17 @@ export async function getOrder() {
 
 export async function postOrder(data) {
   try {
-    
-    const order = await API.post("order", data);
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    };
+  
+    const order = await API.post("order", data, config);
+    console.log(order, "ini order")
   } catch (error) {
     throw new error("Failed Login");
   }
 }
+
+

@@ -1,36 +1,51 @@
-import React from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import MarkerMap from "../assets/waysfood/marker.png"
+import L from "leaflet";
 
-import GoogleMapReact from "google-map-react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapLocation, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
+export default function Map({ handleMapClick, selectedLat, selectedLng }) {
 
-const Map = ({ defaultCenter, defaultZoom, selectedLocation, handleMapClick }) => {
-  const mark = <FontAwesomeIcon icon={faMapMarkerAlt} size="2x" style={{ color: "red", cursor: "pointer" }} />
-  const Marker = ({ text }) => (
-    <div style={{ position: "relative", transform: "translate(-50%, -100%)" }}>
-      {text}
-    </div>
-  );
+  const icon = L.icon({
+    iconUrl: MarkerMap,
+    iconSize: [38, 36],
+  });
+
+
+  function MapEvents() {
+    useMapEvents({
+      click: handleMapClick,
+    });
+
+    return null;
+  }
+  const centerMap = [-6.17781214899621, 106.82685538905109];
   return (
-    <div style={{ height: "450px", width: "100%" }}>
-      <GoogleMapReact
-        defaultCenter={defaultCenter}
-        defaultZoom={defaultZoom}
-        onClick={handleMapClick}
-        bootstrapURLKeys={{ key: "AIzaSyCyOco1HeYAgOl3srERtNWggMIR5vF8py0" }}
-      >
-        {selectedLocation && (
-          <Marker
-            lat={selectedLocation.lat}
-            lng={selectedLocation.lng}
-            text={mark}
+    <>
+      <div style={{ width: "50vw", height: "100%", border: "1px solid grey" }}>
+        <MapContainer
+          center={centerMap}
+          zoom={14}
+          scrollWheelZoom={true}
+          style={{ height: "400px", width: "100%" }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=vUvFcgFdVky4hX0f5zZA"
           />
-        )}
-      </GoogleMapReact>
-    </div>
+          <MapEvents />
+          {selectedLat && selectedLng && (
+            <Marker
+              position={[selectedLat, selectedLng]}
+              draggable={true}
+              animate={true}
+              icon={icon}
+            >
+              <Popup>Hey ! you found me</Popup>
+            </Marker>
+          )}
+        </MapContainer>
+      </div>
+
+    </>
   );
-};
-
-
-
-export default Map;
+}

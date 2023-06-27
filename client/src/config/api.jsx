@@ -2,9 +2,12 @@ import axios from "axios";
 
 // Create base URL API
 export const API = axios.create({
-  baseURL: "http://127.0.0.1:8080/api/v1/",
+  baseURL: "https://waysfood-production.up.railway.app/api/v1/",
 });
 
+export const APILOC = axios.create({
+  baseURL: "https://nominatim.openstreetmap.org"
+})
 
 
 // Set Authorization Token Header

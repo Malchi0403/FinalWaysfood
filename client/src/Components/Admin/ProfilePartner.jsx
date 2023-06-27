@@ -3,13 +3,26 @@ import { Col, Container, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Icon from "../../assets/waysfood/Icon.svg";
 import { UserContext } from "../../utils/context/userContext";
+import { transactionPartner } from "../../utils/transaction";
+import { useCustomQuery } from "../../config/query";
 const DetailProfilePartner = () => {
   const navigate = useNavigate()
   const handleButtonProfile = () => {
     navigate("/EditProfile")
   }
-
+  const dateConvert = (params) => {
+    var params = new Date();
+    var options = {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    };
+    var formattedDate = params.toLocaleDateString("en-US", options);
+    return formattedDate;
+  };
   const [state] = useContext(UserContext);
+  let { data, isLoading } = useCustomQuery("transactionPartner", transactionPartner)
 
   return (
     <>
@@ -46,19 +59,32 @@ const DetailProfilePartner = () => {
           </Col>
           <Col >
 
-            <Row className="cardHistory">
-              <Col md={7} >
-                <p className="pName" style={{ marginBottom: "4px" }}>Nama</p>
-                <p className="pDate" style={{ marginBottom: "14px" }}><span>Hari</span>Tanggal</p>
-                <p className="pTotal">Total : Rp </p>
-              </Col>
-              <Col md={5}>
-                <img src={Icon} alt="" />
-                <div className="historyStatus">
-                  <p>Status</p>
-                </div>
-              </Col>
-            </Row>
+            {!isLoading && data?.length > 0 ? (
+              data.map((item, idx) => {
+                return (
+                  <>
+                    <Row className="cardHistory">
+                      <Col md={7} key={idx} >
+                        <p className="pName" style={{ marginBottom: "4px" }}>{item?.seller?.fullname}</p>
+                        <p className="pDate" style={{ marginBottom: "14px" }}><span>{dateConvert("2023-15-06")}</span></p>
+                        <p className="pTotal">Total : Rp {item?.total_price.toLocaleString("en-ID")} </p>
+                      </Col>
+                      <Col md={5}>
+                        <img src={Icon} alt="" />
+                        <div className="historyStatus">
+                          <p>{item?.status}</p>
+                        </div>
+                      </Col>
+                    </Row>
+                  </>
+                )
+              })
+            ) : (
+              <>
+                <h1>No order ....</h1>
+              </>
+            )
+            }
 
           </Col>
         </Row>

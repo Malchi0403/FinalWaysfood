@@ -1,5 +1,4 @@
 import { Col, Container, Row } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
 
 
 const Contents = ({ data, load }) => {
@@ -19,7 +18,7 @@ const Contents = ({ data, load }) => {
                     <img src={item.image} alt="" className="imagePop" />
                   </Col>
                   <Col>
-                    <p className="textPop">{item.fullname}</p>
+                    <p className="textPop">{item?.fullname}</p>
                   </Col>
                 </Row>
               </div>

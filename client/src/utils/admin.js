@@ -23,3 +23,34 @@ export async function addProduct(data) {
   }
 }
 
+export async function Partner() {
+  try {
+    const response = await API.get("partner");
+    if (response?.status === 200) {
+      return response?.data?.data;
+    }
+  } catch (error) {
+    throw new Error("Failed to fetch data");
+  }
+}
+
+export async function transactionPartner() {
+  try {
+    const response = await API.get("transaction-partner");
+    if (response.status === 200) {
+      return response.data.data;
+    }
+  } catch (error) {
+    throw new Error("Failed to fetch data");
+  }
+}
+export async function transactionUser() {
+  try {
+    const response = await API.get("transaction-user");
+    if (response.status === 200) {
+      return response?.data?.data;
+    }
+  } catch (error) {
+    throw new Error("Failed to fetch data");
+  }
+}

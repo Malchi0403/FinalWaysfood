@@ -317,6 +317,7 @@ input[type=file]::-webkit-file-upload-button {
   height: 101px;
   background-color: #fff;
   padding: 14px 16px;
+  margin-bottom: 5px;
 }
 
 .pName {
@@ -449,5 +450,51 @@ input[type=file]::-webkit-file-upload-button {
   background-color: #433434;
   color: #fff;
   border-radius: 5px;
-  
+}
+
+.listAdmin li {
+  list-style: none;
+  border: 1.5px solid black;
+  padding: 5px 20px;
+  cursor: pointer;
+}
+
+.listAdmin li a {
+  text-decoration: none;
+  color: #000;
+  font-weight: 600;
+}
+
+.preStyle {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.nextStyle {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.green {
+  color: rgb(0, 201, 0) !important;
+  font-weight: 800;
+}
+
+.orange {
+  color: rgb(255, 101, 45) !important;
+  font-weight: 800;
+}
+
+.linkAdmin:hover {
+  font-weight: 600;
+  text-decoration: underline !important;
+}
+
+.hidden {
+  display: none;
+}
+
+.active {
+  background-color: #0224ffb5;
+  color: #fff;
+  font-weight: bold;
 }
