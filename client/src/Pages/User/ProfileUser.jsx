@@ -44,7 +44,7 @@ const DetailProfilePartner = () => {
               </Col>
               <Col md={4} className="detailProfile">
                 <div>
-                  <h5>Name Partner</h5>
+                  <h5>Name</h5>
                   <p>{state.user.fullname}</p>
                 </div>
                 <div>
