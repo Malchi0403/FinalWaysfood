@@ -1,7 +1,7 @@
 import { faMapLocation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useEffect, useState } from "react";
-import { Container, Form, Modal } from "react-bootstrap";
+import { Container, Form, Modal, ModalBody } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { APILOC } from "../../config/api";
 import { useCustomMutation } from "../../config/query";
@@ -15,7 +15,6 @@ const EditProfile = () => {
   const [lat, setLat] = useState();
   const [lng, setLng] = useState();
   const [state, _] = useContext(UserContext)
-
 
   const getLocation = (lats, lngs) => {
     APILOC.get(`/reverse?format=json&lat=${lats}&lon=${lngs}`).then(
@@ -103,12 +102,15 @@ const EditProfile = () => {
             handleMapClick={(e) => handleMapClick(e)}
           />
         </Modal.Body>
+        <Modal.Body>
+          <input type="text" value={selectedLocation} style={{ width: "100%" }} />
+        </Modal.Body>
       </Modal>
       <Container style={{ margin: "80px auto" }}>
         <h4
           className="addProduct"
         >
-          Edit Profile Partner
+          {state?.user?.role === "As User" ? "Edit Profile" : "Edit Profile Partner"}
         </h4>
 
         <Form onSubmit={(e) => updateUser(e)}>
@@ -118,7 +120,7 @@ const EditProfile = () => {
               name="fullname"
               value={userUpdateData.fullname}
               onChange={handleInputChange}
-              placeholder="Name Partner"
+              placeholder={state?.user?.role === "As User" ? "Name User" : "Name Partner"}
               style={{ width: "69%", backgroundColor: "#D2D2D240", border: "2px solid #766C6C", height: "50px" }}
             />
             <Form.Control
