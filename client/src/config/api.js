@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create base URL API
 export const API = axios.create({
-  baseURL: "https://waysfood-production.up.railway.app/api/v1/",
+  baseURL: "https://waysfood-production-f83d.up.railway.app/api/v1/",
 });
 
 export const APILOC = axios.create({
